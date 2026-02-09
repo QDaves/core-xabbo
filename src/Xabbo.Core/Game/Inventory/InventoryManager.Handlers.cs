@@ -84,18 +84,24 @@ partial class InventoryManager
     {
         if (_inventory is null) return;
 
-        InventoryItem item = e.Packet.Read<InventoryItem>();
-        _inventory.AddOrUpdate(item, out bool added);
+        short count = e.Packet.Read<short>();
+        InventoryItem[] items = new InventoryItem[count];
+        for (int i = 0; i < count; i++)
+            items[i] = e.Packet.Read<InventoryItem>();
+        foreach (var item in items)
+        {
+            _inventory.AddOrUpdate(item, out bool added);
 
-        if (added)
-        {
-            Log.LogTrace("Added inventory item {id}.", item.Id);
-            ItemAdded?.Invoke(new InventoryItemEventArgs(item));
-        }
-        else
-        {
-            Log.LogTrace("Updated inventory item {id}.", item.Id);
-            ItemUpdated?.Invoke(new InventoryItemEventArgs(item));
+            if (added)
+            {
+                Log.LogTrace("Added inventory item {id}.", item.Id);
+                ItemAdded?.Invoke(new InventoryItemEventArgs(item));
+            }
+            else
+            {
+                Log.LogTrace("Updated inventory item {id}.", item.Id);
+                ItemUpdated?.Invoke(new InventoryItemEventArgs(item));
+            }
         }
     }
 
