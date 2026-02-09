@@ -16,7 +16,9 @@ public enum FigurePartType
     ChestAccessory,
     WaistAccessory,
     Coat,
-    ChestPrint
+    ChestPrint,
+    PetSlot,
+    MountCompanion
 }
 
 public static partial class XabboEnumExtensions
@@ -38,6 +40,8 @@ public static partial class XabboEnumExtensions
             FigurePartType.WaistAccessory => "wa",
             FigurePartType.Coat => "cc",
             FigurePartType.ChestPrint => "cp",
+            FigurePartType.PetSlot => "pt",
+            FigurePartType.MountCompanion => "mc",
             _ => throw new ArgumentException($"Unknown figure part type: {figurePartType}", nameof(figurePartType)),
         };
     }

@@ -103,6 +103,8 @@ public static class H
             case "wa": partType = FigurePartType.WaistAccessory; break;
             case "cc": partType = FigurePartType.Coat; break;
             case "cp": partType = FigurePartType.ChestPrint; break;
+            case "pt": partType = FigurePartType.PetSlot; break;
+            case "mc": partType = FigurePartType.MountCompanion; break;
             default: partType = default; return false;
         }
         return true;
