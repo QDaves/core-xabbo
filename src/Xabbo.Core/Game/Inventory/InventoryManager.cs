@@ -190,18 +190,24 @@ public class InventoryManager : GameStateManager
     {
         if (_inventory is null) return;
 
-        InventoryItem item = InventoryItem.Parse(e.Packet);
-        _inventory.AddOrUpdate(item, out bool added);
+        short count = e.Packet.ReadLegacyShort();
+        InventoryItem[] items = new InventoryItem[count];
+        for (int i = 0; i < count; i++)
+            items[i] = InventoryItem.Parse(e.Packet);
+        foreach (var item in items)
+        {
+            _inventory.AddOrUpdate(item, out bool added);
 
-        if (added)
-        {
-            _logger.LogTrace("Added inventory item {id}.", item.Id);
-            OnItemAdded(item);
-        }
-        else
-        {
-            _logger.LogTrace("Updated inventory item {id}.", item.Id);
-            OnItemUpdated(item);
+            if (added)
+            {
+                _logger.LogTrace("Added inventory item {id}.", item.Id);
+                OnItemAdded(item);
+            }
+            else
+            {
+                _logger.LogTrace("Updated inventory item {id}.", item.Id);
+                OnItemUpdated(item);
+            }
         }
     }
 
