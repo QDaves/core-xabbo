@@ -5,24 +5,21 @@ namespace Xabbo.Core;
 /// <inheritdoc cref="IChatSettings"/>.
 public class ChatSettings : IChatSettings, IParserComposer<ChatSettings>
 {
-    public int TextSize { get; set; }
-    public bool Unknown1 { get; set; }
+    public ChatFloodProtection FloodProtection { get; set; }
 
     public ChatSettings()
     {
-        TextSize = 1;
+        FloodProtection = ChatFloodProtection.Standard;
     }
 
     internal ChatSettings(in PacketReader p)
     {
-        TextSize = p.ReadInt();
-        Unknown1 = p.ReadBool();
+        FloodProtection = (ChatFloodProtection)p.ReadInt();
     }
 
     void IComposer.Compose(in PacketWriter p)
     {
-        p.WriteInt(TextSize);
-        p.WriteBool(Unknown1);
+        p.WriteInt((int)FloodProtection);
     }
 
     static ChatSettings IParser<ChatSettings>.Parse(in PacketReader p) => new(in p);

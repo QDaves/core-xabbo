@@ -13,9 +13,7 @@ public class User(Id id, int index) : Avatar(AvatarType.User, id, index), IUser
     public int AchievementScore { get; set; }
     public bool IsStaff { get; set; }
     public string BadgeCode { get; set; } = "";
-
-    // unknown
-    public int Unknown1 { get; set; } = -1;
+    public int BadgeRank { get; set; } = -1;
 
     public RightsLevel RightsLevel => CurrentUpdate?.RightsLevel ?? RightsLevel.None;
     public bool HasRights => RightsLevel > 0;
@@ -34,7 +32,7 @@ public class User(Id id, int index) : Avatar(AvatarType.User, id, index), IUser
         AchievementScore = p.ReadInt();
         IsStaff = p.ReadBool();
         if (p.Client is ClientType.Flash)
-            Unknown1 = p.ReadInt();
+            BadgeRank = p.ReadInt();
     }
 
     protected override void OnUpdate(AvatarStatus update) { }
@@ -54,6 +52,6 @@ public class User(Id id, int index) : Avatar(AvatarType.User, id, index), IUser
         p.WriteInt(AchievementScore);
         p.WriteBool(IsStaff);
         if (p.Client is ClientType.Flash)
-            p.WriteInt(Unknown1);
+            p.WriteInt(BadgeRank);
     }
 }

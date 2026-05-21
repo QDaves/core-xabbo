@@ -6,10 +6,7 @@ namespace Xabbo.Core;
 public interface IChatSettings
 {
     /// <summary>
-    /// The chat text size.
+    /// The chat flood protection level for the room.
     /// </summary>
-    int TextSize { get; }
-
-    // unknown
-    bool Unknown1 { get; }
+    ChatFloodProtection FloodProtection { get; }
 }
