@@ -69,6 +69,8 @@ public class AvatarWiredMovement : WiredMovement
     public bool IsSlide { get; set; }
     public int BodyDirection { get; set; }
     public int HeadDirection { get; set; }
+    public bool HasMovementCurve { get; set; }
+    public int MovementCurveValue { get; set; }
 
     public AvatarWiredMovement() : base(WiredMovementType.Avatar) { }
 
@@ -88,7 +90,11 @@ public class AvatarWiredMovement : WiredMovement
         BodyDirection = p.ReadInt();
         HeadDirection = p.ReadInt();
         if (p.Client is ClientType.Flash)
-            p.ReadBool();
+        {
+            HasMovementCurve = p.ReadBool();
+            if (HasMovementCurve)
+                MovementCurveValue = p.ReadInt();
+        }
     }
 
     protected override void Compose(in PacketWriter p)
@@ -106,7 +112,11 @@ public class AvatarWiredMovement : WiredMovement
         p.WriteInt(BodyDirection);
         p.WriteInt(HeadDirection);
         if (p.Client is ClientType.Flash)
-            p.WriteBool(false);
+        {
+            p.WriteBool(HasMovementCurve);
+            if (HasMovementCurve)
+                p.WriteInt(MovementCurveValue);
+        }
     }
 }
 
@@ -119,6 +129,10 @@ public class FloorItemWiredMovement : WiredMovement
     public Tile Destination { get; set; }
     public Id ItemId { get; set; }
     public int Rotation { get; set; }
+    public bool HasMovementCurve { get; set; }
+    public int MovementCurveValue { get; set; }
+    public bool HasMovementCurveExtra { get; set; }
+    public int MovementCurveExtraValue { get; set; }
 
     public FloorItemWiredMovement() : base(WiredMovementType.FloorItem) { }
 
@@ -136,7 +150,14 @@ public class FloorItemWiredMovement : WiredMovement
         AnimationTime = p.ReadInt();
         Rotation = p.ReadInt();
         if (p.Client is ClientType.Flash)
-            p.ReadString();
+        {
+            HasMovementCurve = p.ReadBool();
+            if (HasMovementCurve)
+                MovementCurveValue = p.ReadInt();
+            HasMovementCurveExtra = p.ReadBool();
+            if (HasMovementCurveExtra)
+                MovementCurveExtraValue = p.ReadInt();
+        }
     }
 
     protected override void Compose(in PacketWriter p)
@@ -152,7 +173,14 @@ public class FloorItemWiredMovement : WiredMovement
         p.WriteInt(AnimationTime);
         p.WriteInt(Rotation);
         if (p.Client is ClientType.Flash)
-            p.WriteString("");
+        {
+            p.WriteBool(HasMovementCurve);
+            if (HasMovementCurve)
+                p.WriteInt(MovementCurveValue);
+            p.WriteBool(HasMovementCurveExtra);
+            if (HasMovementCurveExtra)
+                p.WriteInt(MovementCurveExtraValue);
+        }
     }
 }
 
@@ -210,7 +238,7 @@ public class AvatarDirectionWiredMovement : WiredMovement
     public int BodyDirection { get; set; }
     public int HeadDirection { get; set; }
 
-    public AvatarDirectionWiredMovement() : base(WiredMovementType.WallItem) { }
+    public AvatarDirectionWiredMovement() : base(WiredMovementType.AvatarDirection) { }
 
     internal AvatarDirectionWiredMovement(in PacketReader p) : this()
     {
