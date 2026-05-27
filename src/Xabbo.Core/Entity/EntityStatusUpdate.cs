@@ -18,6 +18,7 @@ public class EntityStatusUpdate : IEntityStatusUpdate, IReadOnlyDictionary<strin
     public Tile Location { get; set; }
     public int HeadDirection { get; set; }
     public int Direction { get; set; }
+    public int JumpingPower { get; set; }
     public string Status
     {
         get => CompileStatus();
@@ -201,6 +202,7 @@ public class EntityStatusUpdate : IEntityStatusUpdate, IReadOnlyDictionary<strin
         Location = default;
         HeadDirection = 0;
         Direction = 0;
+        JumpingPower = 0;
     }
 
     public EntityStatusUpdate(IEntityStatusUpdate original)
@@ -210,6 +212,7 @@ public class EntityStatusUpdate : IEntityStatusUpdate, IReadOnlyDictionary<strin
         HeadDirection = original.HeadDirection;
         Direction = original.Direction;
         Status = original.Status;
+        JumpingPower = original.JumpingPower;
     }
 
     private EntityStatusUpdate(IReadOnlyPacket packet)
@@ -219,7 +222,7 @@ public class EntityStatusUpdate : IEntityStatusUpdate, IReadOnlyDictionary<strin
         HeadDirection = packet.ReadInt();
         Direction = packet.ReadInt();
         if (packet.Protocol == ClientType.Flash)
-            packet.ReadInt();
+            JumpingPower = packet.ReadInt();
 
         ParseStatus(packet.ReadString());
     }
@@ -233,7 +236,7 @@ public class EntityStatusUpdate : IEntityStatusUpdate, IReadOnlyDictionary<strin
             .WriteInt(Direction);
 
         if (packet.Protocol == ClientType.Flash)
-            packet.WriteInt(0);
+            packet.WriteInt(JumpingPower);
 
         packet.WriteString(CompileStatus());
     }

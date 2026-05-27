@@ -10,6 +10,7 @@ public interface IEntityStatusUpdate : IComposable
     Tile Location { get; }
     int HeadDirection { get; }
     int Direction { get; }
+    int JumpingPower { get; }
     string Status { get; }
 
     Stances Stance { get; }

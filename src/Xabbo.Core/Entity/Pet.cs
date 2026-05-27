@@ -51,6 +51,7 @@ public class Pet : Entity, IPet
         packet
             .WriteInt(Breed)
             .WriteLegacyLong(OwnerId)
+            .WriteString(OwnerName)
             .WriteInt(RarityLevel)
             .WriteBool(HasSaddle)
             .WriteBool(IsRiding)
