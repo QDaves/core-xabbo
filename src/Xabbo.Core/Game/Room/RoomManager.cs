@@ -1166,7 +1166,7 @@ public class RoomManager : GameStateManager
         }
     }
 
-    [Receive("ObjectRemoveMultiple")]
+    [Receive(nameof(Incoming.ObjectRemoveMultiple))]
     protected void HandleObjectRemoveMultiple(IReadOnlyPacket packet)
     {
         if (!IsInRoom)
@@ -1460,7 +1460,7 @@ public class RoomManager : GameStateManager
         }
     }
 
-    [Receive("ItemRemoveMultiple")]
+    [Receive(nameof(Incoming.ItemRemoveMultiple))]
     protected void HandleItemRemoveMultiple(IReadOnlyPacket packet)
     {
         if (!IsInRoom)

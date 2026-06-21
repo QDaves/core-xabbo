@@ -1,3 +1,4 @@
 [submodule "Xabbo.Common"]
 	path = lib/Xabbo.Common
-	url = https://github.com/b7c/Xabbo.Common
+	url = https://github.com/QDaves/common-xabbo
+	branch = common-scripter
