@@ -1062,9 +1062,9 @@ public class RoomManager : GameStateManager
     [Receive(nameof(Incoming.ActiveObjects))]
     protected void HandleActiveObjects(IReadOnlyPacket packet)
     {
-        if (!IsLoadingRoom)
+        if (!IsLoadingRoom && !IsInRoom)
         {
-            _logger.LogDebug("Not loading room.");
+            _logger.LogDebug("Not loading room / not in room.");
             return;
         }
 
@@ -1074,6 +1074,7 @@ public class RoomManager : GameStateManager
             return;
         }
 
+        bool loading = IsLoadingRoom;
         List<FloorItem> newItems = new List<FloorItem>();
 
         FloorItem[] items = FloorItem.ParseAll(packet);
@@ -1082,6 +1083,10 @@ public class RoomManager : GameStateManager
             if (_currentRoom.FloorItems.TryAdd(item.Id, item))
             {
                 newItems.Add(item);
+                if (!loading)
+                {
+                    OnFloorItemAdded(item);
+                }
             }
             else
             {
@@ -1158,6 +1163,41 @@ public class RoomManager : GameStateManager
         else
         {
             _logger.LogError("[{method}] Failed to remove item {id} from the dictionary", nameof(HandleActiveObjectRemove), id);
+        }
+    }
+
+    [Receive(nameof(Incoming.ObjectRemoveMultiple))]
+    protected void HandleObjectRemoveMultiple(IReadOnlyPacket packet)
+    {
+        if (!IsInRoom)
+        {
+            _logger.LogDebug("[{method}] Not in room.", nameof(HandleObjectRemoveMultiple));
+            return;
+        }
+
+        if (_currentRoom is null)
+        {
+            _logger.LogWarning("[{method}] Current room is null.", nameof(HandleObjectRemoveMultiple));
+            return;
+        }
+
+        short count = packet.ReadLegacyShort();
+        for (int i = 0; i < count; i++)
+        {
+            long id = packet.ReadLegacyLong();
+            if (_currentRoom.FloorItems.TryRemove(id, out FloorItem? item))
+            {
+                OnFloorItemRemoved(item);
+            }
+            else
+            {
+                _logger.LogError("[{method}] Failed to remove item {id} from the dictionary", nameof(HandleObjectRemoveMultiple), id);
+            }
+        }
+
+        if (packet.Available >= 4)
+        {
+            packet.ReadInt();
         }
     }
 
@@ -1323,9 +1363,9 @@ public class RoomManager : GameStateManager
     [Receive(nameof(Incoming.Items))]
     protected void HandleItems(IReadOnlyPacket packet)
     {
-        if (!IsLoadingRoom)
+        if (!IsLoadingRoom && !IsInRoom)
         {
-            _logger.LogDebug("Not loading room.");
+            _logger.LogDebug("Not loading room / not in room.");
             return;
         }
 
@@ -1335,6 +1375,7 @@ public class RoomManager : GameStateManager
             return;
         }
 
+        bool loading = IsLoadingRoom;
         List<WallItem> newItems = new List<WallItem>();
 
         WallItem[] items = WallItem.ParseAll(packet);
@@ -1343,6 +1384,10 @@ public class RoomManager : GameStateManager
             if (_currentRoom.WallItems.TryAdd(item.Id, item))
             {
                 newItems.Add(item);
+                if (!loading)
+                {
+                    OnWallItemAdded(item);
+                }
             }
             else
             {
