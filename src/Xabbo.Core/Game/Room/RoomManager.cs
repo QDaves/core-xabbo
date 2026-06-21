@@ -1460,6 +1460,41 @@ public class RoomManager : GameStateManager
         }
     }
 
+    [Receive(nameof(Incoming.ItemRemoveMultiple))]
+    protected void HandleItemRemoveMultiple(IReadOnlyPacket packet)
+    {
+        if (!IsInRoom)
+        {
+            _logger.LogDebug("[{method}] Not in room.", nameof(HandleItemRemoveMultiple));
+            return;
+        }
+
+        if (_currentRoom is null)
+        {
+            _logger.LogWarning("[{method}] Current room is null.", nameof(HandleItemRemoveMultiple));
+            return;
+        }
+
+        short count = packet.ReadLegacyShort();
+        for (int i = 0; i < count; i++)
+        {
+            long id = packet.ReadLegacyLong();
+            if (_currentRoom.WallItems.TryRemove(id, out WallItem? item))
+            {
+                OnWallItemRemoved(item);
+            }
+            else
+            {
+                _logger.LogError("[{method}] Failed to remove item {id} from the dictionary", nameof(HandleItemRemoveMultiple), id);
+            }
+        }
+
+        if (packet.Available >= 4)
+        {
+            packet.ReadInt();
+        }
+    }
+
     [Receive(nameof(Incoming.UpdateItem))]
     protected void HandleUpdateItem(IReadOnlyPacket packet)
     {
