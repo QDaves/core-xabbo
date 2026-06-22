@@ -449,6 +449,14 @@ partial class RoomManager
     }
 
     [Intercept]
+    void HandleFloorItemsRemoved(FloorItemsRemovedMsg removed)
+    {
+        using var scope = Log.MethodScope();
+        foreach (Id id in removed)
+            RemoveFloorItem(id);
+    }
+
+    [Intercept]
     void HandleFloorItemUpdated(FloorItemUpdatedMsg updated)
     {
         using (Log.MethodScope())
@@ -548,6 +556,14 @@ partial class RoomManager
     {
         using (Log.MethodScope())
             RemoveWallItem(removed.Id);
+    }
+
+    [Intercept]
+    void HandleItemsRemoved(WallItemsRemovedMsg removed)
+    {
+        using var scope = Log.MethodScope();
+        foreach (Id id in removed)
+            RemoveWallItem(id);
     }
     #endregion
 

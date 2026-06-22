@@ -3,4 +3,5 @@
 	url = https://github.com/xabbo/common
 [submodule "messages"]
 	path = lib/messages
-	url = https://github.com/xabbo/messages
+	url = https://github.com/QDaves/messages-xabbo
+	branch = messages-xabbo

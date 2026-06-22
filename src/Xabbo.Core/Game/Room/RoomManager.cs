@@ -305,9 +305,16 @@ public sealed partial class RoomManager(IInterceptor interceptor, ILoggerFactory
     #region - Furni -
     void LoadFloorItems(IEnumerable<FloorItem> items)
     {
-        if (!EnsureLoadingRoom(out Room? room))
+        if (!IsLoadingRoom && !IsInRoom)
+        {
+            Log.LogWarning("Not loading or in room.");
+            return;
+        }
+
+        if (!EnsureRoomInternal(out Room? room))
             return;
 
+        bool loading = IsLoadingRoom;
         List<FloorItem> newItems = [];
 
         foreach (FloorItem item in items)
@@ -315,6 +322,8 @@ public sealed partial class RoomManager(IInterceptor interceptor, ILoggerFactory
             if (room.FloorItems.TryAdd(item.Id, item))
             {
                 newItems.Add(item);
+                if (!loading)
+                    FloorItemAdded?.Invoke(new FloorItemEventArgs(item));
             }
             else
             {
@@ -325,10 +334,10 @@ public sealed partial class RoomManager(IInterceptor interceptor, ILoggerFactory
         if (newItems.Count > 0)
         {
             Log.LogDebug("Loaded {Count} floor items.", newItems.Count);
-            FloorItemsLoaded?.Invoke(new FloorItemsEventArgs(items));
+            FloorItemsLoaded?.Invoke(new FloorItemsEventArgs(newItems));
         }
 
-        if (Interceptor.Session.Is(ClientType.Shockwave))
+        if (loading && Interceptor.Session.Is(ClientType.Shockwave))
         {
             _gotObjects = true;
             EnterRoomOnceLoadedOrigins();
@@ -437,9 +446,16 @@ public sealed partial class RoomManager(IInterceptor interceptor, ILoggerFactory
     #region - Wall items -
     void LoadWallItems(IEnumerable<WallItem> items)
     {
-        if (!EnsureLoadingRoom(out Room? room))
+        if (!IsLoadingRoom && !IsInRoom)
+        {
+            Log.LogWarning("Not loading or in room.");
+            return;
+        }
+
+        if (!EnsureRoomInternal(out Room? room))
             return;
 
+        bool loading = IsLoadingRoom;
         List<WallItem> newItems = [];
 
         foreach (var item in items)
@@ -447,6 +463,8 @@ public sealed partial class RoomManager(IInterceptor interceptor, ILoggerFactory
             if (room.WallItems.TryAdd(item.Id, item))
             {
                 newItems.Add(item);
+                if (!loading)
+                    WallItemAdded?.Invoke(new WallItemEventArgs(item));
             }
             else
             {
@@ -457,10 +475,10 @@ public sealed partial class RoomManager(IInterceptor interceptor, ILoggerFactory
         if (newItems.Count > 0)
         {
             Log.LogDebug("Loaded {Count} wall items.", newItems.Count);
-            WallItemsLoaded?.Invoke(new WallItemsEventArgs(items));
+            WallItemsLoaded?.Invoke(new WallItemsEventArgs(newItems));
         }
 
-        if (Interceptor.Session.Is(ClientType.Shockwave))
+        if (loading && Interceptor.Session.Is(ClientType.Shockwave))
         {
             _gotItems = true;
             EnterRoomOnceLoadedOrigins();
