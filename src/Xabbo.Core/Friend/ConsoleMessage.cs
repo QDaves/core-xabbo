@@ -2,10 +2,12 @@ using Xabbo.Messages;
 
 namespace Xabbo.Core;
 
-public class ConsoleMessage : IParserComposer<ConsoleMessage>
+public sealed class ConsoleMessage : IParserComposer<ConsoleMessage>
 {
     public Id ChatId { get; set; }
+    public int MessageType { get; set; }
     public string Content { get; set; } = "";
+    public int HabbiconId { get; set; }
     public int SecondsSinceSent { get; set; }
     public string? Time { get; set; }
     public string MessageId { get; set; } = "";
@@ -13,31 +15,39 @@ public class ConsoleMessage : IParserComposer<ConsoleMessage>
     public Id SenderId { get; set; }
     public string? SenderName { get; set; }
     public string SenderFigure { get; set; } = "";
-    public Gender SenderGender { get; set; } = Gender.None;
 
-    static ConsoleMessage IParser<ConsoleMessage>.Parse(in PacketReader p) => p.Client switch
+    public ConsoleMessage() { }
+
+    private ConsoleMessage(in PacketReader p)
     {
-        ClientType.Shockwave => new()
+        if (p.Client is ClientType.Shockwave)
         {
-            MessageId = p.ReadString(),
-            SenderId = p.ReadId(),
-            SenderGender = (Gender)p.ReadInt(),
-            SenderFigure = p.ReadString(),
-            Time = p.ReadString(),
-            Content = p.ReadString().Replace('\r', '\n'),
-        },
-        not ClientType.Shockwave => new()
-        {
-            ChatId = p.ReadId(),
-            Content = p.ReadString(),
-            SecondsSinceSent = p.ReadInt(),
-            MessageId = p.ReadString(),
-            ConfirmationId = p.ReadInt(),
-            SenderId = p.ReadId(),
-            SenderName = p.ReadString(),
-            SenderFigure = p.ReadString(),
+            MessageId = p.ReadString();
+            SenderId = p.ReadId();
+            Time = p.ReadString();
+            Content = p.ReadString().Replace('\r', '\n');
         }
-    };
+        else
+        {
+            ChatId = p.ReadId();
+            MessageType = p.ReadInt();
+            switch (MessageType)
+            {
+                case 0:
+                    Content = p.ReadString();
+                    break;
+                case 1:
+                    HabbiconId = p.ReadInt();
+                    break;
+            }
+            SecondsSinceSent = p.ReadInt();
+            MessageId = p.ReadString();
+            ConfirmationId = p.ReadInt();
+            SenderId = p.ReadId();
+            SenderName = p.ReadString();
+            SenderFigure = p.ReadString();
+        }
+    }
 
     void IComposer.Compose(in PacketWriter p)
     {
@@ -45,15 +55,22 @@ public class ConsoleMessage : IParserComposer<ConsoleMessage>
         {
             p.WriteString(MessageId);
             p.WriteId(SenderId);
-            p.WriteInt((int)SenderGender);
-            p.WriteString(SenderFigure);
             p.WriteString(Time ?? "");
             p.WriteString(Content.Replace('\n', '\r'));
         }
         else
         {
             p.WriteId(ChatId);
-            p.WriteString(Content);
+            p.WriteInt(MessageType);
+            switch (MessageType)
+            {
+                case 0:
+                    p.WriteString(Content);
+                    break;
+                case 1:
+                    p.WriteInt(HabbiconId);
+                    break;
+            }
             p.WriteInt(SecondsSinceSent);
             p.WriteString(MessageId);
             p.WriteInt(ConfirmationId);
@@ -62,4 +79,6 @@ public class ConsoleMessage : IParserComposer<ConsoleMessage>
             p.WriteString(SenderFigure);
         }
     }
+
+    static ConsoleMessage IParser<ConsoleMessage>.Parse(in PacketReader p) => new(in p);
 }
