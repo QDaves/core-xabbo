@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Xabbo.Messages;
 using Xabbo.Interceptor;
 using Xabbo.Interceptor.Tasks;
+using ClientType = Xabbo.ClientType;
 
 namespace Xabbo.Core.Tasks;
 
@@ -24,13 +25,13 @@ public class MakeMarketplaceOfferTask : InterceptorTask<int>
 
     protected override ValueTask OnExecuteAsync() => Interceptor.SendAsync(
         Out.MarketplaceMakeOffer,
+        _price,
         _type switch
         {
             ItemType.Floor => 1,
             ItemType.Wall => 2,
             _ => throw new InvalidOperationException($"Invalid item type: {_type}.")
         },
-        _price,
         _itemIds
     );
 
@@ -39,5 +40,19 @@ public class MakeMarketplaceOfferTask : InterceptorTask<int>
     {
         e.Block();
         SetResult(e.Packet.ReadInt());
+    }
+
+    [InterceptIn(nameof(Incoming.ErrorReport))]
+    protected void HandleErrorReport(InterceptArgs e)
+    {
+        int action = e.Packet.ReadInt();
+        // The server reports errors keyed by the request's Unity header id, regardless of client type.
+        if (action != Out.MarketplaceMakeOffer.GetValue(ClientType.Unity))
+            return;
+
+        e.Block();
+        int errorCode = e.Packet.ReadInt();
+        string timestamp = e.Packet.ReadString();
+        SetException(new Exception($"Marketplace offer request was rejected (error code {errorCode} at {timestamp})."));
     }
 }
