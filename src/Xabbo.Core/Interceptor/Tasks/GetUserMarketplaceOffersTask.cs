@@ -13,7 +13,7 @@ public class GetUserMarketplaceOffersTask : InterceptorTask<IUserMarketplaceOffe
         : base(interceptor)
     { }
 
-    protected override ValueTask OnExecuteAsync() => Interceptor.SendAsync(Out.MarketplaceListOwnOffers);
+    protected override ValueTask OnExecuteAsync() => Interceptor.SendAsync(Out.MarketplaceListOwnOffers, 1);
 
     [InterceptIn(nameof(Incoming.MarketplaceOwnOfferList))]
     protected void HandleMarketplaceOwnOfferList(InterceptArgs e)
