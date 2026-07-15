@@ -17,13 +17,30 @@ public class MarketplaceOffer : IMarketplaceOffer
     public int Average { get; set; }
     public int Offers { get; set; }
 
+    /// <summary>
+    /// Gets whether this item supports being used/locked (e.g. a lovelock), in which
+    /// case <see cref="IsUsed"/> indicates whether it already has been.
+    /// </summary>
     public bool IsUsable { get; set; }
+    /// <summary>
+    /// Gets whether this item has been used/locked. Only meaningful when <see cref="IsUsable"/> is <c>true</c>.
+    /// </summary>
     public bool IsUsed { get; set; }
-    public string? UsedByName { get; set; }
-    public string? UsedWithName { get; set; }
-    public string? UsedByFigure { get; set; }
-    public string? UsedWithFigure { get; set; }
-    public string? UsedDate { get; set; }
+
+    /// <summary>
+    /// Best-effort extraction of who used this item, when <see cref="Data"/> is a
+    /// <see cref="IStringArrayData"/> laid out like a lovelock's (index 1 = used-by
+    /// name, 2 = used-with name, 3/4 = figures, 5 = date). Not guaranteed to apply to
+    /// every usable item type; returns null if the shape doesn't match.
+    /// </summary>
+    public string? UsedByName => GetUsedString(1);
+    public string? UsedWithName => GetUsedString(2);
+    public string? UsedByFigure => GetUsedString(3);
+    public string? UsedWithFigure => GetUsedString(4);
+    public string? UsedDate => GetUsedString(5);
+
+    private string? GetUsedString(int index)
+        => Data is IStringArrayData array && index < array.Count ? array[index] : null;
 
     public MarketplaceOffer()
     {
@@ -39,9 +56,19 @@ public class MarketplaceOffer : IMarketplaceOffer
         switch (itemType)
         {
             case 1:
+            case 4:
+                // itemType 4 is a "usable" item (e.g. a lovelock) that can be used/locked.
+                // It is otherwise identical to itemType 1: same polymorphic stuff data
+                // (which is where a lovelock's used-by name/figure/date ends up, as a
+                // StringArrayData), just followed by one extra raw boolean for IsUsed.
                 Type = ItemType.Floor;
                 Kind = packet.ReadInt();
                 Data = ItemData.Parse(packet);
+                if (itemType == 4)
+                {
+                    IsUsable = true;
+                    IsUsed = packet.ReadBool();
+                }
                 break;
             case 2:
                 Type = ItemType.Wall;
@@ -58,44 +85,14 @@ public class MarketplaceOffer : IMarketplaceOffer
                     UniqueSeriesSize = packet.ReadInt()
                 };
                 break;
-            case 4:
-                // "Usable" items (e.g. lovelocks) that can be used/locked, showing who
-                // used it. Structure verified against live search results; the extra
-                // int read below (only present when IsUsable) has an unconfirmed meaning.
-                Type = ItemType.Floor;
-                Kind = packet.ReadInt();
-                int usableFlag = packet.ReadInt();
-                packet.ReadInt(); // constant marker, observed as 6 whenever usableFlag != 0
-                IsUsable = usableFlag != 0;
-                string usedState = packet.ReadString();
-                Data = new LegacyData() { Value = usedState };
-                if (IsUsable)
-                {
-                    IsUsed = usedState == "1";
-                    UsedByName = packet.ReadString();
-                    UsedWithName = packet.ReadString();
-                    UsedByFigure = packet.ReadString();
-                    UsedWithFigure = packet.ReadString();
-                    UsedDate = packet.ReadString();
-                }
-                Offers = packet.ReadByte();
-                TimeRemaining = packet.ReadInt();
-                Price = packet.ReadInt();
-                Average = packet.ReadInt();
-                if (IsUsable)
-                    packet.ReadInt();
-                break;
             default: throw new Exception($"Unknown MarketplaceItem type: {itemType}");
         }
 
-        if (itemType != 4)
-        {
-            Price = packet.ReadInt();
-            TimeRemaining = packet.ReadInt();
-            Average = packet.ReadInt();
-            if (hasOfferCount)
-                Offers = packet.ReadInt();
-        }
+        Price = packet.ReadInt();
+        TimeRemaining = packet.ReadInt();
+        Average = packet.ReadInt();
+        if (hasOfferCount)
+            Offers = packet.ReadInt();
     }
 
     public void Compose(IPacket packet)
