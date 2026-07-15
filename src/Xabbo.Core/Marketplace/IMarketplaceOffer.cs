@@ -34,4 +34,34 @@ public interface IMarketplaceOffer : IItem, IComposable
     /// Not available when loaded from the user's own marketplace offers.
     /// </summary>
     int Offers { get; }
+
+    /// <summary>
+    /// Gets whether this item supports being used/locked (e.g. a lovelock),
+    /// showing who it was used by when <see cref="IsUsed"/> is <c>true</c>.
+    /// </summary>
+    bool IsUsable { get; }
+    /// <summary>
+    /// Gets whether this item has been used/locked. Only meaningful when <see cref="IsUsable"/> is <c>true</c>.
+    /// </summary>
+    bool IsUsed { get; }
+    /// <summary>
+    /// Gets the name of the user who used this item, if <see cref="IsUsed"/> is <c>true</c>.
+    /// </summary>
+    string? UsedByName { get; }
+    /// <summary>
+    /// Gets the name of the user this item was used with, if <see cref="IsUsed"/> is <c>true</c>.
+    /// </summary>
+    string? UsedWithName { get; }
+    /// <summary>
+    /// Gets the figure string of the user who used this item, if <see cref="IsUsed"/> is <c>true</c>.
+    /// </summary>
+    string? UsedByFigure { get; }
+    /// <summary>
+    /// Gets the figure string of the user this item was used with, if <see cref="IsUsed"/> is <c>true</c>.
+    /// </summary>
+    string? UsedWithFigure { get; }
+    /// <summary>
+    /// Gets the date this item was used, formatted as <c>dd/MM/yyyy</c>, if <see cref="IsUsed"/> is <c>true</c>.
+    /// </summary>
+    string? UsedDate { get; }
 }

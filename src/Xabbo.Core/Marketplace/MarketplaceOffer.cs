@@ -17,6 +17,14 @@ public class MarketplaceOffer : IMarketplaceOffer
     public int Average { get; set; }
     public int Offers { get; set; }
 
+    public bool IsUsable { get; set; }
+    public bool IsUsed { get; set; }
+    public string? UsedByName { get; set; }
+    public string? UsedWithName { get; set; }
+    public string? UsedByFigure { get; set; }
+    public string? UsedWithFigure { get; set; }
+    public string? UsedDate { get; set; }
+
     public MarketplaceOffer()
     {
         Data = new LegacyData();
@@ -50,14 +58,44 @@ public class MarketplaceOffer : IMarketplaceOffer
                     UniqueSeriesSize = packet.ReadInt()
                 };
                 break;
+            case 4:
+                // "Usable" items (e.g. lovelocks) that can be used/locked, showing who
+                // used it. Structure verified against live search results; the extra
+                // int read below (only present when IsUsable) has an unconfirmed meaning.
+                Type = ItemType.Floor;
+                Kind = packet.ReadInt();
+                int usableFlag = packet.ReadInt();
+                packet.ReadInt(); // constant marker, observed as 6 whenever usableFlag != 0
+                IsUsable = usableFlag != 0;
+                string usedState = packet.ReadString();
+                Data = new LegacyData() { Value = usedState };
+                if (IsUsable)
+                {
+                    IsUsed = usedState == "1";
+                    UsedByName = packet.ReadString();
+                    UsedWithName = packet.ReadString();
+                    UsedByFigure = packet.ReadString();
+                    UsedWithFigure = packet.ReadString();
+                    UsedDate = packet.ReadString();
+                }
+                Offers = packet.ReadByte();
+                TimeRemaining = packet.ReadInt();
+                Price = packet.ReadInt();
+                Average = packet.ReadInt();
+                if (IsUsable)
+                    packet.ReadInt();
+                break;
             default: throw new Exception($"Unknown MarketplaceItem type: {itemType}");
         }
 
-        Price = packet.ReadInt();
-        TimeRemaining = packet.ReadInt();
-        Average = packet.ReadInt();
-        if (hasOfferCount)
-            Offers = packet.ReadInt();
+        if (itemType != 4)
+        {
+            Price = packet.ReadInt();
+            TimeRemaining = packet.ReadInt();
+            Average = packet.ReadInt();
+            if (hasOfferCount)
+                Offers = packet.ReadInt();
+        }
     }
 
     public void Compose(IPacket packet)
